@@ -1,0 +1,29 @@
+diff --git a/src/gui/text/windows/qwindowsfontengine.cpp b/src/gui/text/windows/qwindowsfontengine.cpp
+index 545b5459..68508709 100644
+--- a/src/gui/text/windows/qwindowsfontengine.cpp
++++ b/src/gui/text/windows/qwindowsfontengine.cpp
+@@ -68,9 +68,13 @@ QFixed QWindowsFontEngine::lineThickness() const
+ 
+ static OUTLINETEXTMETRIC *getOutlineTextMetric(HDC hdc)
+ {
++    // Kestrel patch: GetOutlineTextMetrics() can fail (returns 0) for some fonts;
++    // never hand out an uninitialised buffer.
+     const auto size = GetOutlineTextMetrics(hdc, 0, nullptr);
+-    auto otm = reinterpret_cast<OUTLINETEXTMETRIC *>(malloc(size));
+-    GetOutlineTextMetrics(hdc, size, otm);
++    const size_t alloc = qMax<size_t>(size, sizeof(OUTLINETEXTMETRIC));
++    auto otm = reinterpret_cast<OUTLINETEXTMETRIC *>(calloc(1, alloc));
++    if (size == 0 || GetOutlineTextMetrics(hdc, size, otm) == 0)
++        memset(otm, 0, alloc);
+     return otm;
+ }
+ 
+@@ -90,6 +94,8 @@ bool QWindowsFontEngine::hasCMapTable() const
+ 
+ static inline QString stringFromOutLineTextMetric(const OUTLINETEXTMETRIC *otm, PSTR offset)
+ {
++    if (!otm || otm->otmSize == 0 || quintptr(offset) == 0 || quintptr(offset) >= otm->otmSize)
++        return QString();
+     const uchar *p = reinterpret_cast<const uchar *>(otm) + quintptr(offset);
+     return QString::fromWCharArray(reinterpret_cast<const wchar_t *>(p));
+ }

@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
+# host rcc may compress with zstd, which a Qt built without zstd cannot read
+set(CMAKE_AUTORCC_OPTIONS "--no-zstd")
 
 option(KESTREL_VOICE "Build voice support (Opus, libsodium, libdave)" ON)
 
