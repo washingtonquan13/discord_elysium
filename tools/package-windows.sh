@@ -74,6 +74,7 @@ cp "$ROOT/README.md" "$OUT/README.txt"
 cp "$ROOT/LICENSE" "$OUT/LICENSE.txt"
 cd "$ROOT/dist"
 rm -f Kestrel-windows-x64.zip
-zip -qr Kestrel-windows-x64.zip Kestrel
+find Kestrel -name "*.dll" -exec x86_64-w64-mingw32-strip --strip-unneeded {} ;
+zip -9 -qr Kestrel-windows-x64.zip Kestrel
 ls -la Kestrel-windows-x64.zip
 du -sh Kestrel
